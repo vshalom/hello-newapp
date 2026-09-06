@@ -20,24 +20,26 @@ podTemplate(containers: [
                 checkout scm
             }
         } // end checkout
-        stage('Build & Scan') {
-            parallel(
-       		'build': {
-            	container('docker') {
-                	echo "Building docker image..."
-                	script {
-                    	dockerImage = docker.build("${appimage}:${apptag}")
-                	}
-            	}
-        	}, // end build
 
-        	'scan': {
-            	container('trivy') {
-                	echo "Scanning image ${appimage}:${apptag} with Trivy..."
-                	sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${appimage}:${apptag}"
-            		}
-        	} // end scan
-		)}
+        stage('Build & Scan FS') {
+            parallel(
+                'build': {
+                    container('docker') {
+                        echo "Building docker image..."
+                        script {
+                            dockerImage = docker.build("${appimage}:${apptag}")
+                        }
+                    }
+                },
+                'scan-fs': {
+                    container('trivy') {
+                        echo "Scanning source/filesystem with Trivy..."
+                        sh "trivy fs ."
+                    }
+                }
+            )
+        } // end Build & Scan FS
+
         stage('push') {
             container('docker') {
                 script {
@@ -47,5 +49,12 @@ podTemplate(containers: [
                 }
             }
         } // end push
+
+        stage('scan image') {
+            container('trivy') {
+                echo "Scanning pushed image ${appimage}:${apptag} with Trivy..."
+                sh "trivy image --exit-code 1 --severity HIGH,CRITICAL ${appimage}:${apptag}"
+            }
+        } // end scan image
     }
 }
