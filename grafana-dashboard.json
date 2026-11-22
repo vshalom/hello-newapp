@@ -250,7 +250,7 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "vshalom-hello-newapp",
-  "uid": "vshalom-hello-newapp",
+  "title": "vshalom-onboardflow",
+  "uid": "vshalom-onboardflow",
   "version": 1
 }
