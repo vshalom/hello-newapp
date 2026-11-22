@@ -10,18 +10,18 @@
 properties([
   parameters([
     choice(name: 'ENV', choices: ['dev', 'qa', 'prd'], description: 'Environment folder: systems/<DEPARTMENT>/<ENV>/'),
-    string(name: 'DEPARTMENT', defaultValue: 'devops', description: 'Department folder: hr, finance, legal, digital, devops'),
+    string(name: 'DEPARTMENT', defaultValue: 'hr', description: 'Department folder: hr, finance, legal, digital, devops'),
     booleanParam(name: 'SERVICE_MONITOR', defaultValue: false, description: 'Render the ServiceMonitor (needs the Prometheus Operator CRDs in the cluster)'),
     choice(name: 'DIND_STORAGE_DRIVER', choices: ['overlay2', 'vfs'], description: 'dind storage driver: overlay2 (fast). Use vfs only if overlay2 fails on your nodes (slow, uses more disk)')
   ])
 ])
 
-def user        = "elevy99927"              // your name: Docker Hub user AND gitops file name
-def appname     = "helloworld"
+def user        = "vshalom"              // your name: Docker Hub user AND gitops file name
+def appname     = "onboardflow"
 def appimage    = "${user}/${appname}"      // docker.io/<user>/helloworld
 def apptag      = "${env.BUILD_NUMBER}"
 def envName     = params.ENV ?: 'dev'
-def department  = params.DEPARTMENT ?: 'devops'
+def department  = params.DEPARTMENT ?: 'hr'
 def serviceMon  = params.SERVICE_MONITOR ? 'true' : 'false'
 def storageDrv  = params.DIND_STORAGE_DRIVER ?: 'overlay2'
 def gitopsRepo  = "github.com/elevy99927-demos/gitops.git"
@@ -42,7 +42,7 @@ podTemplate(containers: [
       emptyDirVolume(mountPath: '/var/lib/docker', memory: false)
   ])  {
     // Credentials come from Jenkins (Manage Jenkins -> Credentials), not from Kubernetes secrets:
-    //   docker-cred  : Username with password - <user> + Docker Hub access token
+    //   vshalom-dockerhub  : Username with password - <user> + Docker Hub access token
     //   github-token : Username with password - elevy99927-demos + GitHub token (write access to gitops)
     node(POD_LABEL) {
         stage('checkout') {
@@ -61,7 +61,7 @@ podTemplate(containers: [
                 '''
                 // log in BEFORE the build: base images are pulled as <user>, not anonymously
                 // (all pods behind one NAT IP share Docker Hub's anonymous pull limit)
-                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: 'vshalom-dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
                     sh "echo \"\$DOCKER_TOKEN\" | docker login -u \"\$DOCKER_USER\" --password-stdin"
                 }
                 echo "Building ${appimage}:${apptag}"
