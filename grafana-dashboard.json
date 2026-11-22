@@ -250,7 +250,7 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Python App Metrics",
-  "uid": "python-app-metrics",
+  "title": "vshalom-hello-newapp",
+  "uid": "vshalom-hello-newapp",
   "version": 1
 }
