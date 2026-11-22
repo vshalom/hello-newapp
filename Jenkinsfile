@@ -123,9 +123,37 @@ podTemplate(containers: [
 
         stage('add-dashboard') {
             container('deployer') {
-                sh """
-                    echo " TBD: Add dashboard to grafana"
+                withCredentials([usernamePassword(credentialsId: 'github-token', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
+                sh """#!/bin/sh
+                    set -e
+                    rm -rf gitops
+                    git clone https://\${GIT_USER}:\${GIT_TOKEN}@${gitopsRepo} gitops
+                    cd gitops
+                    git config user.name  "Jenkins (${user})"
+                    git config user.email "elevy99927-demos@users.noreply.github.com"
+
+                    mkdir -p dashboards
+                    sed -e 's/\${DS_PROMETHEUS}/prometheus/g' \\
+                        -e 's/"uid": "python-app-metrics"/"uid": "${user}-${appname}"/' \\
+                        -e 's/"title": "Python App Metrics"/"title": "${appname} Metrics (${user})"/' \\
+                        "${env.WORKSPACE}/grafana-dashboard.json" > dashboards/${user}-${appname}.json
+
+                    git add dashboards/${user}-${appname}.json
+                    if git diff --cached --quiet; then
+                        echo "Dashboard unchanged - nothing to commit"
+                        exit 0
+                    fi
+                    git commit -m "Add/update Grafana dashboard for ${appname} (build ${env.BUILD_NUMBER})"
+
+                    for i in 1 2 3 4 5; do
+                        if git push origin HEAD:main; then exit 0; fi
+                        echo "push rejected, rebasing (attempt \$i)"
+                        git pull --rebase origin main
+                        sleep \$i
+                    done
+                    echo "push failed after 5 attempts"; exit 1
                 """
+                }
             }
         }
     }
