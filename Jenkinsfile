@@ -5,12 +5,12 @@
 
 
 
-def user        = "elevy99927"              // your name: Docker Hub user AND gitops file name
-def appname     = "helloworld"
+def user        = "vshalom"              // your name: Docker Hub user AND gitops file name
+def appname     = "onboardflow"
 def appimage    = "${user}/${appname}"      // docker.io/<user>/helloworld
 def apptag      = "${env.BUILD_NUMBER}"
 def envName     = "dev"
-def department  = "devops"
+def department  = "hr"
 
 def gitopsRepo  = "github.com/elevy99927-demos/gitops.git"
 def gitopsFile  = "systems/${department}/${envName}/${user}.yaml"
@@ -50,7 +50,7 @@ podTemplate(containers: [
         stage('push') {
             container('docker') {
                 // TAGS: <BUILD_NUMBER> (immutable, deployed by GitOps) and latest
-                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
+                withCredentials([usernamePassword(credentialsId: 'vshalom-dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_TOKEN')]) {
                     sh """
                         set -e
                         echo "\$DOCKER_TOKEN" | docker login -u "\$DOCKER_USER" --password-stdin
